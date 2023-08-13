@@ -7,16 +7,13 @@ import be.tarsos.dsp.pitch.PitchProcessor
 
 class AudioAnalyzer {
     companion object Analyzer {
-        fun convertFrequencyToMidiNoteNumber(frequency: Float): String? {
-            var resultNote: String? = null
-            Log.d("ANALYZER","Je passe dans le convertisseur")
-            val existsNote = NoteData.notes.find { note -> note.frequency == frequency}
-            if (existsNote != null) {
-                resultNote = existsNote.name
-            } else {
-                return resultNote
-            }
-            return resultNote
+        fun convertFrequencyToMidiNoteNumber(frequency: Float): String {
+            val closestFrequency = NoteData.frequenciesToNotes.keys.minByOrNull {
+                Math.abs(it - frequency)
+            } ?: return "" // Si le tableau est vide, retourne une chaîne vide
+
+            Log.d( "AUDIO ANALYZER  : ", NoteData.frequenciesToNotes[closestFrequency] ?: "")
+            return NoteData.frequenciesToNotes[closestFrequency] ?: ""
         }
     }
 }
