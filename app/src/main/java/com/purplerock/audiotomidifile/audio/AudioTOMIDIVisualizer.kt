@@ -1,14 +1,26 @@
 package com.purplerock.audiotomidifile.audio
 
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-object AudioTOMIDIVisualizer {
+object AudioTOMIDIVisualizer : ViewModel(), AudioVisualizer {
+
+    private val scope = MainScope()
 
     val note: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
     }
 
-    fun updateNoteValue(newValue: String) {
-        note.value = newValue
+    override fun updateNoteValue(noteValue: String) {
+        viewModelScope.launch {
+            withContext(Dispatchers.Main) {
+                note.postValue(noteValue)
+            }
+        }
     }
 }

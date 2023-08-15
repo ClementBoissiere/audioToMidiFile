@@ -1,9 +1,13 @@
 package com.purplerock.audiotomidifile.audio
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import be.hogent.tarsos.dsp.MicrophoneAudioDispatcher
 import be.hogent.tarsos.dsp.pitch.PitchProcessor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
-object AudioThreadService {
+object AudioThreadService : ViewModel() {
 
     private val sampleRate = 44100
     private val sampleRateFloat = 44100F
@@ -24,12 +28,12 @@ object AudioThreadService {
         )
 
         dispatcher.addAudioProcessor(pitchProcessor)
-        audioThread = Thread(dispatcher, "Audio Thread")
-        audioThread.start()
+        viewModelScope.launch(Dispatchers.IO) {
+            dispatcher.run()
+        }
     }
 
     fun stopAudioProcessing() {
         dispatcher.stop()
-        audioThread.join()
     }
 }
