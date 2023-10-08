@@ -141,6 +141,6 @@ class MainActivity : ComponentActivity() {
 
     private fun stopAudioRecorder() {
         this.recordingState.value = false
-        AudioThreadService.stopAudioProcessing()
+        AudioThreadService.stopAudioProcessing(applicationContext.filesDir)
     }
 }

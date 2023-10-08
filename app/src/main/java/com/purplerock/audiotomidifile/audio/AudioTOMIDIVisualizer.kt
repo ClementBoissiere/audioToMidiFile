@@ -1,5 +1,6 @@
 package com.purplerock.audiotomidifile.audio
 
+import NoteData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,11 +17,14 @@ object AudioTOMIDIVisualizer : ViewModel(), AudioVisualizer {
         MutableLiveData<String>()
     }
 
-    override fun updateNoteValue(noteValue: String) {
+    override fun updateNoteValue(midiNote: Int) {
         viewModelScope.launch {
             withContext(Dispatchers.Main) {
+                var noteValue = ""
+                noteValue = NoteData.midiNotesToLabel[midiNote] ?: ""
                 note.postValue(noteValue)
             }
         }
     }
+
 }
