@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -61,23 +63,32 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun AudioToMIDIFilePreview() {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            MusicButton()
+        Box() {
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.9f) // 90% de l'écran à gauche
+            ) {
+                AudioToMIDIFIleTheme {
+                    AffichageNoteLabel()
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth() // Le reste de l'écran à droite
+            ) {
+                MusicButton()
+            }
         }
+
     }
 
     @Composable
     fun MusicButton() {
         val isLoading = this.recordingState.value
 
-        AudioToMIDIFIleTheme {
-            AffichageNoteLabel()
-        }
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
             Column(verticalArrangement = Arrangement.Center) {
                 if (isLoading) {
                     Button(
@@ -117,8 +128,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private @Composable
-    fun AffichageNoteLabel() {
+    @Composable
+    private fun AffichageNoteLabel() {
         var noteLabel by remember {
             mutableStateOf("")
         }
