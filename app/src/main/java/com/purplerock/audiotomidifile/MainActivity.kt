@@ -2,26 +2,30 @@ package com.purplerock.audiotomidifile
 
 import android.Manifest
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +40,7 @@ import com.purplerock.audiotomidifile.audio.AudioTOMIDIVisualizer
 import com.purplerock.audiotomidifile.audio.AudioThreadService
 import com.purplerock.audiotomidifile.handler.PermissionHandler.Permissions.addPermissions
 import com.purplerock.audiotomidifile.ui.theme.AudioToMIDIFIleTheme
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
 
@@ -70,7 +75,7 @@ class MainActivity : ComponentActivity() {
                     .fillMaxWidth(0.9f) // 90% de l'écran à gauche
             ) {
                 AudioToMIDIFIleTheme {
-                    AffichageNoteLabel()
+                    AffichageNote()
                 }
             }
             Column(
@@ -104,8 +109,8 @@ class MainActivity : ComponentActivity() {
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                         modifier = Modifier
-                            .size(140.dp)
-                            .padding(PaddingValues(bottom = 10.dp))
+                            .size(75.dp)
+                            .padding(PaddingValues(bottom = 5.dp))
                     )
                 } else {
                     Button(
@@ -120,8 +125,8 @@ class MainActivity : ComponentActivity() {
                             )
                         },
                         modifier = Modifier
-                            .size(140.dp)
-                            .padding(PaddingValues(bottom = 10.dp))
+                            .size(75.dp)
+                            .padding(PaddingValues(bottom = 5.dp))
                     )
                 }
             }
@@ -129,7 +134,10 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun AffichageNoteLabel() {
+    private fun AffichageNote() {
+        val isLoading = this.recordingState.value
+        val scrollState = rememberScrollState()
+        var progress by remember { mutableStateOf(0.0f) }
         var noteLabel by remember {
             mutableStateOf("")
         }
@@ -138,9 +146,31 @@ class MainActivity : ComponentActivity() {
             // Mettre à jour l'UI lorsque le LiveData change
             noteLabel = newValue
         }
-        Row() {
-            Text(text = "Votre note :")
-            Text(noteLabel)
+
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            LinearProgressIndicator(
+                progress = progress,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .padding(16.dp)
+                    .background(color = Color.Red)
+                    .horizontalScroll(enabled = true, state = scrollState)
+            )
+
+            LaunchedEffect(isLoading) {
+                while (isLoading) {
+                    Log.d("UI", "JE DESSINE")
+                    repeat(1) { // You can adjust the number of repetitions
+                        delay(5) // Adjust the delay duration
+                        progress += 0.001f // Adjust the step size
+                    }
+                }
+            }
         }
     }
 
