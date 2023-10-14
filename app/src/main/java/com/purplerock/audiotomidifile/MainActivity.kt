@@ -1,6 +1,7 @@
 package com.purplerock.audiotomidifile
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -8,13 +9,14 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,8 +24,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,12 +42,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.purplerock.audiotomidifile.audio.AudioTOMIDIVisualizer
 import com.purplerock.audiotomidifile.audio.AudioThreadService
 import com.purplerock.audiotomidifile.handler.PermissionHandler.Permissions.addPermissions
 import com.purplerock.audiotomidifile.ui.theme.AudioToMIDIFIleTheme
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
+
 
 class MainActivity : ComponentActivity() {
 
@@ -72,49 +74,51 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalFoundationApi::class)
     @Preview
     @Composable
     fun AudioToMIDIFilePreview() {
-        Column(modifier = Modifier.fillMaxSize().fillMaxHeight()) {
-            Box(modifier = Modifier.fillMaxSize().fillMaxHeight()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth()
-                        .background(Color.Red)
-                ) // 10% de l'écran à gauche)
-                {
-                    PianoRoll()
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth() // 90% de l'écran à gauche
-                        .background(Color.Yellow)
-                ) {
-                    //AffichageNote()
-                }
-            }
+        val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+        val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+        ConstraintLayout(modifier = Modifier
+            .fillMaxHeight()
+            .fillMaxSize()) {
+            val (pianoRollBox, notePanelBox, buttonBox) = createRefs()
+
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
                     .fillMaxHeight()
-                    .background(Color.Green)
-            ) {
-                MusicButton()
+                    .fillMaxWidth(0.1f)
+                    .constrainAs(pianoRollBox) {}) {
+                PianoRoll(screenWidth, screenHeight)
+            }
+            Box(modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(0.8f)
+                .constrainAs(notePanelBox) {
+                    start.linkTo(pianoRollBox.absoluteRight)
+                }) {
+                AffichageNote()
+            }
+            Box(modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(0.1f)
+                .constrainAs(buttonBox) {
+                    start.linkTo(notePanelBox.absoluteRight)
+                }) {
+                RecordButton()
             }
         }
     }
 
-    @Preview
     @Composable
-    private fun PianoRoll() {
+    private fun PianoRoll(screenWidth: Dp, screenHeight: Dp) {
         //l'écran est à l'horizontale donc on inverse width et height
-        val noteWidth = LocalConfiguration.current.screenWidthDp.dp / 12
-        val noteHeight = LocalConfiguration.current.screenHeightDp.dp / 12
-        val blackNoteIndex = listOf(1, 3, 6, 8, 10) //index des notes #
-        LazyColumn {
-            itemsIndexed(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) { index, _ ->
+        val noteWidth = screenWidth / 10
+        val noteHeight = screenHeight / 12
+        val blackNoteIndex = setOf(1, 3, 6, 8, 10) //index des notes #
+        Column {
+            setOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).forEachIndexed { index, _ ->
                 Log.d("UI", "JE SUIS LE PIANO ROLL")
                 val backgroundColor = if (blackNoteIndex.contains(index)) {
                     Color.Black
@@ -133,9 +137,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("InvalidColorHexValue")
     @Preview
     @Composable
-    fun MusicButton() {
+    fun RecordButton() {
         val isLoading = this.recordingState.value
 
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
@@ -196,8 +201,11 @@ class MainActivity : ComponentActivity() {
                 .fillMaxHeight()
                 .background(Color(0x90F44336))
                 .fillMaxWidth()
+                .horizontalScroll(scrollState)
                 .animateContentSize()
-        )
+        ) {
+
+        }
     }
 
 
