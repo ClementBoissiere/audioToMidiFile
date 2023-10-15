@@ -1,7 +1,6 @@
 package com.purplerock.audiotomidifile.audio
 
 import AudioAnalyzer
-import android.util.Log
 import be.hogent.tarsos.dsp.AudioEvent
 import be.hogent.tarsos.dsp.pitch.PitchDetectionHandler
 import be.hogent.tarsos.dsp.pitch.PitchDetectionResult
@@ -52,23 +51,23 @@ class PitchDetectionHandlerImpl(
 
     override fun handlePitch(result: PitchDetectionResult?, e: AudioEvent?) {
         val pitchInHz = result?.pitch ?: -1.0f
-        Log.d(
-            "PITCH EVENT",
-            "heure : " + System.currentTimeMillis()
-                .toString() + " | isPitched:  " + result?.isPitched + " | result: " + result?.pitch + " | proba: " + result?.probability + " | BufferSize: " + noteBuffer.size
-        )
+//        Log.d(
+//            "PITCH EVENT",
+//            "heure : " + System.currentTimeMillis()
+//                .toString() + " | isPitched:  " + result?.isPitched + " | result: " + result?.pitch + " | proba: " + result?.probability + " | BufferSize: " + noteBuffer.size
+//        )
         if (result?.isPitched!!) {
             val midiNoteActual = AudioAnalyzer.convertFrequencyToMidiNoteNumber(pitchInHz)
             if (result.probability > 0.90f) {
+                visualizer.updateNoteValue(mgs.resultsNote.last())
                 addNoteBuffer(midiNoteActual)
                 writeMIDINote(midiNoteActual)
             }
         } else {
+            visualizer.updateNoteValue(mgs.resultsNote.last())
             addNoteBuffer(0)
             writeMIDINote(0)
         }
-
-        visualizer.updateNoteValue(mgs.resultsNote.last())
     }
 
     private fun writeMIDINote(midiNoteActual: Int) {

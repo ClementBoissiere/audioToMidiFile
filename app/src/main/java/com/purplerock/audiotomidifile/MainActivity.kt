@@ -1,7 +1,6 @@
 package com.purplerock.audiotomidifile
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -9,10 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,17 +21,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,6 +51,7 @@ import com.purplerock.audiotomidifile.ui.theme.AudioToMIDIFIleTheme
 class MainActivity : ComponentActivity() {
 
 
+    private var timer: Long = 0
     private val audioTOMIDIVisualizer: AudioTOMIDIVisualizer by viewModels()
 
     var recordingState = mutableStateOf(false)
@@ -74,15 +72,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @OptIn(ExperimentalFoundationApi::class)
     @Preview
     @Composable
     fun AudioToMIDIFilePreview() {
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-        ConstraintLayout(modifier = Modifier
-            .fillMaxHeight()
-            .fillMaxSize()) {
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxSize()
+        ) {
             val (pianoRollBox, notePanelBox, buttonBox) = createRefs()
 
             Box(
@@ -92,13 +91,14 @@ class MainActivity : ComponentActivity() {
                     .constrainAs(pianoRollBox) {}) {
                 PianoRoll(screenWidth, screenHeight)
             }
-            Box(modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(0.8f)
-                .constrainAs(notePanelBox) {
-                    start.linkTo(pianoRollBox.absoluteRight)
-                }) {
-                AffichageNote()
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.8f)
+                    .constrainAs(notePanelBox) {
+                        start.linkTo(pianoRollBox.absoluteRight)
+                    }) {
+                AffichageNote(screenHeight)
             }
             Box(modifier = Modifier
                 .fillMaxHeight()
@@ -119,7 +119,7 @@ class MainActivity : ComponentActivity() {
         val blackNoteIndex = setOf(1, 3, 6, 8, 10) //index des notes #
         Column {
             setOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).forEachIndexed { index, _ ->
-                Log.d("UI", "JE SUIS LE PIANO ROLL")
+                //Log.d("UI", "JE SUIS LE PIANO ROLL")
                 val backgroundColor = if (blackNoteIndex.contains(index)) {
                     Color.Black
                 } else {
@@ -137,7 +137,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @SuppressLint("InvalidColorHexValue")
     @Preview
     @Composable
     fun RecordButton() {
@@ -184,38 +183,172 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun AffichageNote() {
-        val isLoading = this.recordingState.value
-        val scrollState = rememberScrollState()
-        var progress by remember { mutableStateOf(0.0f) }
-        var noteLabel by remember {
-            mutableStateOf("")
-        }
+    private fun AffichageNote(screenHeight: Dp) {
+        val height = screenHeight / 12
 
+        val listNote = remember { mutableStateListOf<String>() }
         this.audioTOMIDIVisualizer.note.observe(this) { newValue ->
             // Mettre à jour l'UI lorsque le LiveData change
-            noteLabel = newValue
+            listNote.add(newValue)
+            Log.d("UI", "JE SUIS UNE NOUVELLE NOTE")
+            Log.d("UI", listNote.size.toString())
         }
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxHeight()
-                .background(Color(0x90F44336))
                 .fillMaxWidth()
-                .horizontalScroll(scrollState)
                 .animateContentSize()
         ) {
-
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    Log.d("UI", "JE SUIS LE LAZYROW")
+                    DrawNote(note, "C")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "C#")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "D")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "D#")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "E")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "F")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "F#")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "G")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "G#")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "A")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "A#")
+                }
+            }
+            LazyRow(
+                Modifier
+                    .fillMaxWidth()
+                    .height(height)
+            ) {
+                items(listNote) { note ->
+                    DrawNote(note, "B")
+                }
+            }
         }
+    }
+
+    @Composable
+    private fun DrawNote(note: String, noteColumn: String) {
+        Log.d("UI", "JE DRAW")
+        if (noteColumn == note.dropLast(1)) {
+            Box(
+                modifier = Modifier
+                    .width(calculateWidth())
+                    .fillMaxHeight()
+                    .background(Color(0xE4F4A836))
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .width(calculateWidth())
+                    .fillMaxHeight()
+                    .background(Color(0xF44336))
+            )
+        }
+    }
+
+    private fun calculateWidth(): Dp {
+        val nbMilli = System.currentTimeMillis() - this.timer
+        Log.d("UI", "nbMilli : $nbMilli")
+        val size = nbMilli / 999999999999f
+        Log.d("UI", "SIZE : $size")
+        return size.dp
     }
 
 
     private fun launchAudioRecorder() {
         this.recordingState.value = true
+        this.timer = System.currentTimeMillis();
         AudioThreadService.startAudioProcessing(this.audioTOMIDIVisualizer)
     }
 
     private fun stopAudioRecorder() {
         this.recordingState.value = false
+        this.timer = 0;
         AudioThreadService.stopAudioProcessing(applicationContext.filesDir)
     }
 }
