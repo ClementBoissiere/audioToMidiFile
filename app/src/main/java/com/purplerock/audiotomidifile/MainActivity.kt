@@ -8,8 +8,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,15 +25,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -185,13 +191,13 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun AffichageNote(screenHeight: Dp) {
         val height = screenHeight / 12
-
+        var lastNote by remember { mutableStateOf("") }
         val listNote = remember { mutableStateListOf<String>() }
+        val listScrollState = ScrollState(0)
         this.audioTOMIDIVisualizer.note.observe(this) { newValue ->
             // Mettre à jour l'UI lorsque le LiveData change
             listNote.add(newValue)
-            Log.d("UI", "JE SUIS UNE NOUVELLE NOTE")
-            Log.d("UI", listNote.size.toString())
+            lastNote = listNote[listNote.size - 1]
         }
         Column(
             modifier = Modifier
@@ -203,117 +209,127 @@ class MainActivity : ComponentActivity() {
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    Log.d("UI", "JE SUIS LE LAZYROW")
-                    DrawNote(note, "C")
+                    DrawNote(note, "C", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "C#")
+                    DrawNote(note, "C#", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "D")
+                    DrawNote(note, "D", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "D#")
+                    DrawNote(note, "D#", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "E")
+                    DrawNote(note, "E", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "F")
+                    DrawNote(note, "F", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "F#")
+                    DrawNote(note, "F#", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "G")
+                    DrawNote(note, "G", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "G#")
+                    DrawNote(note, "G#", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "A")
+                    DrawNote(note, "A", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "A#")
+                    DrawNote(note, "A#", lastNote)
                 }
             }
             LazyRow(
                 Modifier
                     .fillMaxWidth()
                     .height(height)
+                    .horizontalScroll(state = listScrollState, enabled = false)
             ) {
                 items(listNote) { note ->
-                    DrawNote(note, "B")
+                    DrawNote(note, "B", lastNote)
                 }
             }
         }
     }
 
     @Composable
-    private fun DrawNote(note: String, noteColumn: String) {
-        Log.d("UI", "JE DRAW")
+    private fun DrawNote(note: String, noteColumn: String, lastNote: String) {
         if (noteColumn == note.dropLast(1)) {
             Box(
                 modifier = Modifier
@@ -328,15 +344,15 @@ class MainActivity : ComponentActivity() {
                     .fillMaxHeight()
                     .background(Color(0xF44336))
             )
+            if (lastNote == note.dropLast(1)) {
+                Log.d("UI", "JE DRAW LASTNOTE")
+                Text(text = lastNote, color = Color(0xE4C07E1A))
+            }
         }
     }
 
     private fun calculateWidth(): Dp {
-        val nbMilli = System.currentTimeMillis() - this.timer
-        Log.d("UI", "nbMilli : $nbMilli")
-        val size = nbMilli / 999999999999f
-        Log.d("UI", "SIZE : $size")
-        return size.dp
+        return 7.dp
     }
 
 
