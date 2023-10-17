@@ -2,16 +2,13 @@ package com.purplerock.audiotomidifile
 
 import android.Manifest
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,15 +20,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -40,13 +33,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.ExperimentalTextApi
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.purplerock.audiotomidifile.audio.AudioTOMIDIVisualizer
 import com.purplerock.audiotomidifile.audio.AudioThreadService
@@ -188,171 +188,192 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalTextApi::class)
     @Composable
     private fun AffichageNote(screenHeight: Dp) {
+
+        val textMeasure = rememberTextMeasurer()
         val height = screenHeight / 12
         var lastNote by remember { mutableStateOf("") }
+        var actualNote by remember { mutableStateOf("") }
+        var lastNoteDropLast by remember { mutableStateOf("") }
         val listNote = remember { mutableStateListOf<String>() }
-        val listScrollState = ScrollState(0)
         this.audioTOMIDIVisualizer.note.observe(this) { newValue ->
             // Mettre à jour l'UI lorsque le LiveData change
-            listNote.add(newValue)
+            listNote.add(newValue.dropLast(1))
+            actualNote = newValue
             lastNote = listNote[listNote.size - 1]
+            lastNoteDropLast = lastNote.dropLast(1)
         }
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
+        Canvas(
+            Modifier
                 .fillMaxWidth()
-                .animateContentSize()
+                .fillMaxHeight()
+                .background(Color(0xC8FAEEE6))
+
         ) {
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "C", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "C#", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "D", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "D#", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "E", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "F", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "F#", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "G", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "G#", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "A", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "A#", lastNote)
-                }
-            }
-            LazyRow(
-                Modifier
-                    .fillMaxWidth()
-                    .height(height)
-                    .horizontalScroll(state = listScrollState, enabled = false)
-            ) {
-                items(listNote) { note ->
-                    DrawNote(note, "B", lastNote)
+            listNote.forEachIndexed() { index, note ->
+                if ("C" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, 0f),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("C#" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("D" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 2),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("D#" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 3),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("E" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 4),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("F" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 5),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("F#" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 6),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("G" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 7),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("G#" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 8),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("A" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 9),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("A#" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 10),
+                        size = Size(5f, height.value)
+                    )
+                } else if ("B" == note) {
+                    drawRect(
+                        color = Color(0xE8E98438),
+                        topLeft = Offset(index * 5f, height.value * 11),
+                        size = Size(5f, height.value)
+                    )
+                } else {
+                    if (lastNoteDropLast == "C") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xC6E6EAFA))
+                        )
+                    } else if (lastNoteDropLast == "C#") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "D") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "D#") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "E") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "F") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "F#") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "G") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "G#") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "A") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "A#") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    } else if (lastNoteDropLast == "B") {
+                        drawText(
+                            text = lastNote,
+                            topLeft = Offset(index * 5f, 0f),
+                            textMeasurer = textMeasure,
+                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
+                        )
+                    }
                 }
             }
         }
-    }
-
-    @Composable
-    private fun DrawNote(note: String, noteColumn: String, lastNote: String) {
-        if (noteColumn == note.dropLast(1)) {
-            Box(
-                modifier = Modifier
-                    .width(calculateWidth())
-                    .fillMaxHeight()
-                    .background(Color(0xE4F4A836))
-            )
-        } else {
-            Box(
-                modifier = Modifier
-                    .width(calculateWidth())
-                    .fillMaxHeight()
-                    .background(Color(0xF44336))
-            )
-            if (lastNote == note.dropLast(1)) {
-                Log.d("UI", "JE DRAW LASTNOTE")
-                Text(text = lastNote, color = Color(0xE4C07E1A))
-            }
-        }
-    }
-
-    private fun calculateWidth(): Dp {
-        return 7.dp
     }
 
 
