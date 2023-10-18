@@ -2,6 +2,7 @@ package com.purplerock.audiotomidifile
 
 import android.Manifest
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -38,11 +39,14 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -51,6 +55,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.purplerock.audiotomidifile.audio.AudioTOMIDIVisualizer
 import com.purplerock.audiotomidifile.audio.AudioThreadService
 import com.purplerock.audiotomidifile.handler.PermissionHandler.Permissions.addPermissions
+import com.purplerock.audiotomidifile.model.NoteEnum
 import com.purplerock.audiotomidifile.ui.theme.AudioToMIDIFIleTheme
 
 
@@ -192,18 +197,21 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun AffichageNote(screenHeight: Dp) {
 
-        val textMeasure = rememberTextMeasurer()
-        val height = screenHeight / 12
-        var lastNote by remember { mutableStateOf("") }
+        val textMeasurer = rememberTextMeasurer()
+        val pixelOffsetY = with(LocalDensity.current) {
+            (screenHeight / 12) * density
+        }
+        var lastNote by remember { mutableStateOf(NoteEnum.KO) }
         var actualNote by remember { mutableStateOf("") }
         var lastNoteDropLast by remember { mutableStateOf("") }
-        val listNote = remember { mutableStateListOf<String>() }
+        val listNote = remember { mutableStateListOf<NoteEnum>() }
         this.audioTOMIDIVisualizer.note.observe(this) { newValue ->
+            Log.d("UI", "new value :$newValue");
             // Mettre à jour l'UI lorsque le LiveData change
-            listNote.add(newValue.dropLast(1))
+            listNote.add(NoteEnum.valueOf(newValue.dropLast(1)))
             actualNote = newValue
             lastNote = listNote[listNote.size - 1]
-            lastNoteDropLast = lastNote.dropLast(1)
+            lastNoteDropLast = lastNote.name.dropLast(1)
         }
         Canvas(
             Modifier
@@ -213,164 +221,25 @@ class MainActivity : ComponentActivity() {
 
         ) {
             listNote.forEachIndexed() { index, note ->
-                if ("C" == note) {
+                if (NoteEnum.KO !== note) {
+                    Log.d("UI", "ordianl" + note.ordinal)
                     drawRect(
                         color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, 0f),
-                        size = Size(5f, height.value)
+                        topLeft = Offset(index * 5f, pixelOffsetY.value * note.ordinal),
+                        size = Size(5f, pixelOffsetY.value)
                     )
-                } else if ("C#" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value),
-                        size = Size(5f, height.value)
+                }
+                if (index > 0 && listNote[index] != listNote[index - 1]) {
+                    //drawText(text = lastNote, topLeft = Offset( index * 5f, height.value * lastNote.ordinal), textMeasurer = textMeasure, style = TextStyle(fontSize = 1.sp, color = Color(0xC6E6EAFA)))
+                    val measuredText = textMeasurer.measure(
+                        AnnotatedString(listNote[index].name),
+                        overflow = TextOverflow.Ellipsis,
+                        style = TextStyle(fontSize = 15.sp)
                     )
-                } else if ("D" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 2),
-                        size = Size(5f, height.value)
+                    drawText(
+                        measuredText,
+                        topLeft = Offset((index * 5f), pixelOffsetY.value * listNote[index].ordinal)
                     )
-                } else if ("D#" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 3),
-                        size = Size(5f, height.value)
-                    )
-                } else if ("E" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 4),
-                        size = Size(5f, height.value)
-                    )
-                } else if ("F" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 5),
-                        size = Size(5f, height.value)
-                    )
-                } else if ("F#" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 6),
-                        size = Size(5f, height.value)
-                    )
-                } else if ("G" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 7),
-                        size = Size(5f, height.value)
-                    )
-                } else if ("G#" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 8),
-                        size = Size(5f, height.value)
-                    )
-                } else if ("A" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 9),
-                        size = Size(5f, height.value)
-                    )
-                } else if ("A#" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 10),
-                        size = Size(5f, height.value)
-                    )
-                } else if ("B" == note) {
-                    drawRect(
-                        color = Color(0xE8E98438),
-                        topLeft = Offset(index * 5f, height.value * 11),
-                        size = Size(5f, height.value)
-                    )
-                } else {
-                    if (lastNoteDropLast == "C") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xC6E6EAFA))
-                        )
-                    } else if (lastNoteDropLast == "C#") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "D") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "D#") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "E") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "F") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "F#") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "G") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "G#") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "A") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "A#") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    } else if (lastNoteDropLast == "B") {
-                        drawText(
-                            text = lastNote,
-                            topLeft = Offset(index * 5f, 0f),
-                            textMeasurer = textMeasure,
-                            style = TextStyle(fontSize = 1.sp, color = Color(0xE8E98438))
-                        )
-                    }
                 }
             }
         }
