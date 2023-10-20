@@ -127,7 +127,7 @@ class MainActivity : ComponentActivity() {
         //l'écran est à l'horizontale donc on inverse width et height
         val noteWidth = screenWidth / 10
         val noteHeight = screenHeight / 12
-        val blackNoteIndex = setOf(1, 3, 6, 8, 10) //index des notes #
+        val blackNoteIndex = setOf(1, 3, 5, 8, 10) //index des notes #
         Column {
             setOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12).forEachIndexed { index, _ ->
                 //Log.d("UI", "JE SUIS LE PIANO ROLL")
@@ -205,9 +205,11 @@ class MainActivity : ComponentActivity() {
         var actualNote by remember { mutableStateOf("") }
         var lastNoteDropLast by remember { mutableStateOf("") }
         val listNote = remember { mutableStateListOf<NoteEnum>() }
+        val listNoteLabel = remember { mutableStateListOf<String>() }
         this.audioTOMIDIVisualizer.note.observe(this) { newValue ->
             Log.d("UI", "new value :$newValue");
             // Mettre à jour l'UI lorsque le LiveData change
+            listNoteLabel.add(newValue)
             listNote.add(NoteEnum.valueOf(newValue.dropLast(1)))
             actualNote = newValue
             lastNote = listNote[listNote.size - 1]
@@ -232,13 +234,16 @@ class MainActivity : ComponentActivity() {
                 if (index > 0 && listNote[index] != listNote[index - 1]) {
                     //drawText(text = lastNote, topLeft = Offset( index * 5f, height.value * lastNote.ordinal), textMeasurer = textMeasure, style = TextStyle(fontSize = 1.sp, color = Color(0xC6E6EAFA)))
                     val measuredText = textMeasurer.measure(
-                        AnnotatedString(listNote[index].name),
+                        AnnotatedString(listNoteLabel[index - 1]),
                         overflow = TextOverflow.Ellipsis,
                         style = TextStyle(fontSize = 15.sp)
                     )
                     drawText(
                         measuredText,
-                        topLeft = Offset((index * 5f), pixelOffsetY.value * listNote[index].ordinal)
+                        topLeft = Offset(
+                            index * 5f,
+                            pixelOffsetY.value * listNote[index - 1].ordinal
+                        )
                     )
                 }
             }
