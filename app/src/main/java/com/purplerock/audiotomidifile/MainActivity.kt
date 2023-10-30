@@ -13,6 +13,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,11 +22,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -123,43 +126,167 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @Preview
     @Composable
     private fun DisplayButtons() {
+        var isModalVisible by remember { mutableStateOf(false) }
         Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .fillMaxSize()
         ) {
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
+            RecordButton()
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
+            ClearButton()
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
+            ListButton()
+            Spacer(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            )
+            InfoButton(onInfoButtonClick = {
+                isModalVisible = true
+            })
 
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth()
-            ) {
-                RecordButton()
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth()
-            ) {
-                RecordButton()
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth()
-            ) {
-                RecordButton()
-            }
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .fillMaxWidth()
-            ) {
-                RecordButton()
+            // Modale d'information (Dialog) conditionnelle
+            if (isModalVisible) {
+                AlertDialog(
+                    onDismissRequest = {
+                        // Lorsque l'utilisateur ferme la modale, masquer la modale
+                        isModalVisible = false
+                    },
+                    title = { Text("Informations") },
+                    text = { Text("Hello. Important things to know : Not displayed can have a little difference with generated MIDI file in term of note length (not about the pitch). Also, default BPM of MIDI FILE is 120 BPM. Have fun!. Finally you can find your file in your phone, in data files in your phone (data/data/com/purplerock/audiotomidiFile") },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                isModalVisible = false
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                )
             }
         }
+    }
+
+    @Preview
+    @Composable
+    fun RecordButton() {
+        val isLoading = this.recordingState.value
+
+        if (isLoading) {
+            Button(
+                onClick = {
+                    stopAudioRecorder()
+                },
+                content = {
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_mic_24),
+                        contentDescription = "Record"
+                    )
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                modifier = Modifier
+                    .size(75.dp)
+                    .padding(PaddingValues(bottom = 5.dp))
+            )
+        } else {
+            Button(
+                onClick = {
+                    launchAudioRecorder()
+                },
+                content = {
+                    Icon(
+                        modifier = Modifier.fillMaxSize(),
+                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_mic_none_24),
+                        contentDescription = "Record"
+                    )
+                },
+                modifier = Modifier
+                    .size(75.dp)
+                    .padding(PaddingValues(bottom = 5.dp))
+            )
+        }
+    }
+
+    @Composable
+    fun InfoButton(
+        onInfoButtonClick: () -> Unit
+    ) {
+        Button(
+            onClick = {
+                onInfoButtonClick()
+            },
+            content = {
+                Icon(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.outline_info_24),
+                    contentDescription = "Record"
+                )
+            },
+            modifier = Modifier
+                .size(75.dp)
+                .padding(PaddingValues(bottom = 5.dp))
+        )
+    }
+
+    @Preview
+    @Composable
+    fun ClearButton() {
+        Button(
+            onClick = {
+                stopAudioRecorder() //TODO:: CLEAN LA ZONE DES NOTES
+            },
+            content = {
+                Icon(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_clear_24),
+                    contentDescription = "Clean"
+                )
+            },
+            colors = ButtonDefaults.buttonColors(),
+            modifier = Modifier
+                .size(75.dp)
+                .padding(PaddingValues(bottom = 5.dp))
+        )
+    }
+
+    @Preview
+    @Composable
+    fun ListButton() {
+        Button(
+            onClick = {
+                stopAudioRecorder()
+            },
+            content = {
+                Icon(
+                    modifier = Modifier.fillMaxSize(),
+                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_view_list_24),
+                    contentDescription = "List"
+                )
+            },
+            colors = ButtonDefaults.buttonColors(),
+            modifier = Modifier
+                .size(75.dp)
+                .padding(PaddingValues(bottom = 5.dp))
+        )
     }
 
     @Composable
@@ -188,57 +315,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @Preview
-    @Composable
-    fun RecordButton() {
-        val isLoading = this.recordingState.value
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (isLoading) {
-                Button(
-                    onClick = {
-                        stopAudioRecorder()
-                    },
-                    content = {
-                        Icon(
-                            modifier = Modifier.fillMaxSize(),
-                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_mic_24),
-                            contentDescription = "Record"
-                            )
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                        modifier = Modifier
-                            .size(75.dp)
-                            .padding(PaddingValues(bottom = 5.dp))
-                    )
-                } else {
-                    Button(
-                        onClick = {
-                            launchAudioRecorder()
-                        },
-                        content = {
-                            Icon(
-                                modifier = Modifier.fillMaxSize(),
-                                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_mic_none_24),
-                                contentDescription = "Record"
-                            )
-                        },
-                        modifier = Modifier
-                            .size(75.dp)
-                            .padding(PaddingValues(bottom = 5.dp))
-                    )
-            }
-        }
-    }
 
     @OptIn(ExperimentalTextApi::class)
     @Composable
     private fun DisplayNote(screenHeight: Dp) {
 
         val textMeasurer = rememberTextMeasurer()
-        var densityScreen = 0f
         val pixelOffsetY = with(LocalDensity.current) {
-            densityScreen = density
             (screenHeight / 12) * density
         }
         var lastNote by remember { mutableStateOf(NoteEnum.KO) }
@@ -246,7 +329,7 @@ class MainActivity : ComponentActivity() {
         var lastNoteDropLast by remember { mutableStateOf("") }
         val listNote = remember { mutableStateListOf<NoteEnum>() }
         val listNoteLabel = remember { mutableStateListOf<String>() }
-        var width by remember { mutableStateOf(750.dp) }
+        val width by remember { mutableStateOf(750.dp) }
         this.audioTOMIDIVisualizer.note.observe(this) { newValue ->
             // Mettre à jour l'UI lorsque le LiveData change
             listNoteLabel.add(newValue)
@@ -297,13 +380,13 @@ class MainActivity : ComponentActivity() {
 
     private fun launchAudioRecorder() {
         this.recordingState.value = true
-        this.timer = System.currentTimeMillis();
+        this.timer = System.currentTimeMillis()
         AudioThreadService.startAudioProcessing(this.audioTOMIDIVisualizer)
     }
 
     private fun stopAudioRecorder() {
         this.recordingState.value = false
-        this.timer = 0;
+        this.timer = 0
         AudioThreadService.stopAudioProcessing(applicationContext.filesDir)
     }
 }
