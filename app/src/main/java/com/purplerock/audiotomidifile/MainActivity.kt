@@ -2,7 +2,6 @@ package com.purplerock.audiotomidifile
 
 import android.Manifest
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -10,7 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -32,7 +32,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -86,6 +85,7 @@ class MainActivity : ComponentActivity() {
     @Preview
     @Composable
     fun AudioToMIDIFilePreview() {
+        val scrollState = rememberScrollState()
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         val screenHeight = LocalConfiguration.current.screenHeightDp.dp
         ConstraintLayout(
@@ -106,10 +106,11 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier
                     .fillMaxHeight()
                     .fillMaxWidth(0.8f)
+                    .horizontalScroll(scrollState)
                     .constrainAs(notePanelBox) {
                         start.linkTo(pianoRollBox.absoluteRight)
                     }) {
-                AffichageNote(screenHeight)
+                DisplayNote(screenHeight)
             }
             Box(modifier = Modifier
                 .fillMaxHeight()
@@ -117,6 +118,45 @@ class MainActivity : ComponentActivity() {
                 .constrainAs(buttonBox) {
                     start.linkTo(notePanelBox.absoluteRight)
                 }) {
+                DisplayButtons()
+            }
+        }
+    }
+
+    @Composable
+    private fun DisplayButtons() {
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxSize()
+        ) {
+
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth()
+            ) {
+                RecordButton()
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth()
+            ) {
+                RecordButton()
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth()
+            ) {
+                RecordButton()
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth()
+            ) {
                 RecordButton()
             }
         }
@@ -153,18 +193,17 @@ class MainActivity : ComponentActivity() {
     fun RecordButton() {
         val isLoading = this.recordingState.value
 
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
-            Column(verticalArrangement = Arrangement.Center) {
-                if (isLoading) {
-                    Button(
-                        onClick = {
-                            stopAudioRecorder()
-                        },
-                        content = {
-                            Icon(
-                                modifier = Modifier.fillMaxSize(),
-                                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_mic_24),
-                                contentDescription = "Record"
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isLoading) {
+                Button(
+                    onClick = {
+                        stopAudioRecorder()
+                    },
+                    content = {
+                        Icon(
+                            modifier = Modifier.fillMaxSize(),
+                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_mic_24),
+                            contentDescription = "Record"
                             )
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
@@ -188,17 +227,18 @@ class MainActivity : ComponentActivity() {
                             .size(75.dp)
                             .padding(PaddingValues(bottom = 5.dp))
                     )
-                }
             }
         }
     }
 
     @OptIn(ExperimentalTextApi::class)
     @Composable
-    private fun AffichageNote(screenHeight: Dp) {
+    private fun DisplayNote(screenHeight: Dp) {
 
         val textMeasurer = rememberTextMeasurer()
+        var densityScreen = 0f
         val pixelOffsetY = with(LocalDensity.current) {
+            densityScreen = density
             (screenHeight / 12) * density
         }
         var lastNote by remember { mutableStateOf(NoteEnum.KO) }
@@ -206,25 +246,29 @@ class MainActivity : ComponentActivity() {
         var lastNoteDropLast by remember { mutableStateOf("") }
         val listNote = remember { mutableStateListOf<NoteEnum>() }
         val listNoteLabel = remember { mutableStateListOf<String>() }
+        var width by remember { mutableStateOf(750.dp) }
         this.audioTOMIDIVisualizer.note.observe(this) { newValue ->
-            Log.d("UI", "new value :$newValue");
             // Mettre à jour l'UI lorsque le LiveData change
             listNoteLabel.add(newValue)
             listNote.add(NoteEnum.valueOf(newValue.dropLast(1)))
             actualNote = newValue
             lastNote = listNote[listNote.size - 1]
             lastNoteDropLast = lastNote.name.dropLast(1)
+
+            /*            if ((((listNote.size + 1) * 5) / densityScreen) > width.value) {
+                            width += 100.dp
+                            Log.d("UI CALCUL", ((((listNote.size + 1) * 5) / densityScreen).toString()))
+                            Log.d("UI", "width$width")
+                        }*/
         }
         Canvas(
             Modifier
-                .fillMaxWidth()
+                .width(width)
                 .fillMaxHeight()
                 .background(Color(0xC8FAEEE6))
-
         ) {
             listNote.forEachIndexed() { index, note ->
                 if (NoteEnum.KO !== note) {
-                    Log.d("UI", "ordianl" + note.ordinal)
                     drawRect(
                         color = Color(0xE8E98438),
                         topLeft = Offset(index * 5f, pixelOffsetY.value * note.ordinal),
@@ -232,16 +276,16 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 if (index > 0 && listNote[index] != listNote[index - 1]) {
-                    //drawText(text = lastNote, topLeft = Offset( index * 5f, height.value * lastNote.ordinal), textMeasurer = textMeasure, style = TextStyle(fontSize = 1.sp, color = Color(0xC6E6EAFA)))
                     val measuredText = textMeasurer.measure(
                         AnnotatedString(listNoteLabel[index - 1]),
                         overflow = TextOverflow.Ellipsis,
-                        style = TextStyle(fontSize = 15.sp)
+                        style = TextStyle(fontSize = 13.sp)
                     )
                     drawText(
                         measuredText,
+                        color = Color(0xE8C9712F),
                         topLeft = Offset(
-                            index * 5f,
+                            (index + 1) * 5f,
                             pixelOffsetY.value * listNote[index - 1].ordinal
                         )
                     )
