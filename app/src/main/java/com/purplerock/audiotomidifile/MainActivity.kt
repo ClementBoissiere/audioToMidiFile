@@ -1,6 +1,8 @@
 package com.purplerock.audiotomidifile
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +15,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -54,11 +57,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.FileProvider
 import com.purplerock.audiotomidifile.audio.AudioTOMIDIVisualizer
 import com.purplerock.audiotomidifile.audio.AudioThreadService
 import com.purplerock.audiotomidifile.handler.PermissionHandler.Permissions.addPermissions
 import com.purplerock.audiotomidifile.model.NoteEnum
 import com.purplerock.audiotomidifile.ui.theme.AudioToMIDIFIleTheme
+import java.io.File
 
 
 class MainActivity : ComponentActivity() {
@@ -129,7 +134,9 @@ class MainActivity : ComponentActivity() {
     @Preview
     @Composable
     private fun DisplayButtons() {
-        var isModalVisible by remember { mutableStateOf(false) }
+        val files = getFilesFromDirectory()
+        var isInformationModalVisible by remember { mutableStateOf(false) }
+        var isFileModalVisible by remember { mutableStateOf(false) }
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -152,29 +159,70 @@ class MainActivity : ComponentActivity() {
                     .weight(1f)
                     .fillMaxWidth()
             )
-            ListButton()
+            ListButton {
+                isFileModalVisible = true
+            }
             Spacer(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
             )
             InfoButton(onInfoButtonClick = {
-                isModalVisible = true
+                isInformationModalVisible = true
             })
 
-            // Modale d'information (Dialog) conditionnelle
-            if (isModalVisible) {
+            // Modale de la liste des fichiers
+            if (isFileModalVisible) {
                 AlertDialog(
                     onDismissRequest = {
                         // Lorsque l'utilisateur ferme la modale, masquer la modale
-                        isModalVisible = false
+                        isFileModalVisible = false
+                    },
+                    title = { Text("Fichiers MIDI") },
+                    text = {
+                        Column() {
+                            if (files != null) {
+                                for (file in files) {
+                                    Row(modifier = Modifier.fillMaxWidth()) {
+                                        Text(text = file.name)
+                                        Button(onClick = {
+                                            shareFile(file, applicationContext)
+                                        }, content = {
+                                            Icon(
+                                                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_share_24),
+                                                contentDescription = "Record"
+                                            )
+                                        })
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                isFileModalVisible = false
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+
+            // Modale d'information (Dialog) conditionnelle
+            if (isInformationModalVisible) {
+                AlertDialog(
+                    onDismissRequest = {
+                        // Lorsque l'utilisateur ferme la modale, masquer la modale
+                        isInformationModalVisible = false
                     },
                     title = { Text("Informations") },
                     text = { Text("Hello. Important things to know : Not displayed can have a little difference with generated MIDI file in term of note length (not about the pitch). Also, default BPM of MIDI FILE is 120 BPM. Have fun!. Finally you can find your file in your phone, in data files in your phone (data/data/com/purplerock/audiotomidiFile") },
                     confirmButton = {
                         Button(
                             onClick = {
-                                isModalVisible = false
+                                isInformationModalVisible = false
                             }
                         ) {
                             Text("OK")
@@ -183,6 +231,25 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    fun shareFile(file: File, context: Context) {
+        val uri = FileProvider.getUriForFile(
+            context,
+            context.packageName + ".fileprovider",
+            file
+        )
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "application/octet-stream"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(intent, "Partager le fichier"))
+    }
+
+    private fun getFilesFromDirectory(): Array<out File>? {
+        return applicationContext.filesDir.listFiles()
     }
 
     @Preview
@@ -268,12 +335,11 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    @Preview
     @Composable
-    fun ListButton() {
+    fun ListButton(onInfoButtonClick: () -> Unit) {
         Button(
             onClick = {
-                stopAudioRecorder()
+                onInfoButtonClick()
             },
             content = {
                 Icon(
