@@ -14,48 +14,8 @@ class PitchDetectionHandlerImpl(
     private val noteBuffer: LinkedHashMap<Long, Int>
 ) : PitchDetectionHandler {
 
-    /* private val noteBuffer = CircularBuffer(5);
     override fun handlePitch(result: PitchDetectionResult?, e: AudioEvent?) {
         val pitchInHz = result?.pitch ?: -1.0f
-        Log.d(
-            "PITCH EVENT",
-            "heure : " +  System.currentTimeMillis()
-                .toString() + " | isPitched:  " + result?.isPitched + " | result: " + result?.pitch + " | proba: " + result?.probability
-        )
-        if(result?.isPitched!!) {
-            val midiNoteActual = AudioAnalyzer.convertFrequencyToMidiNoteNumber(pitchInHz)
-            if (result.probability > 0.90f) {
-                noteBuffer.add(Pair(midiNoteActual, System.currentTimeMillis()))
-                if (midiNoteActual != mgs.resultsNote.last()) {
-                    if (noteBuffer.checkForKey(midiNoteActual)) {
-                        // on écrit la note qui vient de se terminer
-                        mgs.resultsNote.add(midiNoteActual)
-                        mgs.writeMidiNote(midiTrack, noteBuffer.get(0).second)
-                    }
-                }
-            }
-        } else {
-            noteBuffer.add(Pair(0, System.currentTimeMillis()))
-            if (0 != mgs.resultsNote.last() && 0 != mgs.resultsNote.last()) {
-                if (noteBuffer.checkForKey(0)) {
-                    // on écrit la note qui vient de se terminer
-                    mgs.resultsNote.add(0)
-                    mgs.writeMidiNote(midiTrack, noteBuffer.get(0).second)
-                }
-            }
-        }
-
-        visualizer.updateNoteValue(mgs.resultsNote.last())
-    }
-    */
-
-    override fun handlePitch(result: PitchDetectionResult?, e: AudioEvent?) {
-        val pitchInHz = result?.pitch ?: -1.0f
-//        Log.d(
-//            "PITCH EVENT",
-//            "heure : " + System.currentTimeMillis()
-//                .toString() + " | isPitched:  " + result?.isPitched + " | result: " + result?.pitch + " | proba: " + result?.probability + " | BufferSize: " + noteBuffer.size
-//        )
         if (result?.isPitched!!) {
             val midiNoteActual = AudioAnalyzer.convertFrequencyToMidiNoteNumber(pitchInHz)
             if (result.probability > 0.90f) {
