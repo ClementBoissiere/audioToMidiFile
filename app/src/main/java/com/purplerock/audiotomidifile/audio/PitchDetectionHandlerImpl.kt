@@ -19,14 +19,14 @@ class PitchDetectionHandlerImpl(
         if (result?.isPitched!!) {
             val midiNoteActual = AudioAnalyzer.convertFrequencyToMidiNoteNumber(pitchInHz)
             if (result.probability > 0.90f) {
-                visualizer.updateNoteValue(mgs.resultsNote.last())
                 addNoteBuffer(midiNoteActual)
                 writeMIDINote(midiNoteActual)
+                visualizer.updateNoteValue(mgs.resultsNote.last())
             }
         } else {
-            visualizer.updateNoteValue(mgs.resultsNote.last())
             addNoteBuffer(0)
             writeMIDINote(0)
+            visualizer.updateNoteValue(mgs.resultsNote.last())
         }
     }
 
