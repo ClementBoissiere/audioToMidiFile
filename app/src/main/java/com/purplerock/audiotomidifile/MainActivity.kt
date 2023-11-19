@@ -38,7 +38,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -74,6 +73,7 @@ class MainActivity : ComponentActivity() {
     private val audioTOMIDIVisualizer: AudioTOMIDIVisualizer by viewModels()
 
     var recordingState = mutableStateOf(false)
+    var clearPiste = mutableStateOf(false)
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,7 +97,6 @@ class MainActivity : ComponentActivity() {
         val scrollState = rememberScrollState()
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-        val listNote = remember { mutableStateListOf<NoteEnum>() }
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxHeight()
@@ -120,7 +119,7 @@ class MainActivity : ComponentActivity() {
                     .constrainAs(notePanelBox) {
                         start.linkTo(pianoRollBox.absoluteRight)
                     }) {
-                DisplayNote(screenHeight, listNote)
+                DisplayNote(screenHeight)
             }
             Box(modifier = Modifier
                 .fillMaxHeight()
@@ -128,14 +127,14 @@ class MainActivity : ComponentActivity() {
                 .constrainAs(buttonBox) {
                     start.linkTo(notePanelBox.absoluteRight)
                 }) {
-                DisplayButtons(listNote)
+                DisplayButtons()
             }
         }
     }
 
 
     @Composable
-    private fun DisplayButtons(listNote: SnapshotStateList<NoteEnum>) {
+    private fun DisplayButtons() {
         val files = getFilesFromDirectory()
         var isInformationModalVisible by remember { mutableStateOf(false) }
         var isFileModalVisible by remember { mutableStateOf(false) }
@@ -155,7 +154,7 @@ class MainActivity : ComponentActivity() {
                     .weight(1f)
                     .fillMaxWidth()
             )
-            ClearButton(listNote)
+            ClearButton()
             Spacer(
                 modifier = Modifier
                     .weight(1f)
@@ -317,10 +316,10 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    fun ClearButton(listNote: SnapshotStateList<NoteEnum>) {
+    fun ClearButton() {
         Button(
             onClick = {
-                cleanAudioRecorder(listNote)
+                cleanAudioRecorder()
             },
             content = {
                 Icon(
@@ -336,8 +335,8 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    private fun cleanAudioRecorder(listNote: SnapshotStateList<NoteEnum>) {
-        listNote.clear()
+    private fun cleanAudioRecorder() {
+        this.clearPiste.value = true
     }
 
     @Composable
@@ -389,13 +388,14 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalTextApi::class)
     @Composable
-    private fun DisplayNote(screenHeight: Dp, listNote: SnapshotStateList<NoteEnum>) {
+    private fun DisplayNote(screenHeight: Dp) {
 
         val textMeasurer = rememberTextMeasurer()
         val pixelOffsetY = with(LocalDensity.current) {
             (screenHeight / 12) * density
         }
         var lastNote by remember { mutableStateOf(NoteEnum.KO) }
+        val listNote = remember { mutableStateListOf<NoteEnum>() }
         var actualNote by remember { mutableStateOf("") }
         var lastNoteDropLast by remember { mutableStateOf("") }
         val listNoteLabel = remember { mutableStateListOf<String>() }
@@ -407,12 +407,6 @@ class MainActivity : ComponentActivity() {
             actualNote = newValue
             lastNote = listNote[listNote.size - 1]
             lastNoteDropLast = lastNote.name.dropLast(1)
-
-            /*            if ((((listNote.size + 1) * 5) / densityScreen) > width.value) {
-                            width += 100.dp
-                            Log.d("UI CALCUL", ((((listNote.size + 1) * 5) / densityScreen).toString()))
-                            Log.d("UI", "width$width")
-                        }*/
         }
         Canvas(
             Modifier
@@ -444,6 +438,15 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+        if (this.clearPiste.value) {
+            listNote.clear()
+            listNoteLabel.clear()
+            lastNote = NoteEnum.KO
+            actualNote = ""
+            lastNoteDropLast = ""
+
+            this.clearPiste.value = false
         }
     }
 
