@@ -38,6 +38,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -96,6 +97,7 @@ class MainActivity : ComponentActivity() {
         val scrollState = rememberScrollState()
         val screenWidth = LocalConfiguration.current.screenWidthDp.dp
         val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+        val listNote = remember { mutableStateListOf<NoteEnum>() }
         ConstraintLayout(
             modifier = Modifier
                 .fillMaxHeight()
@@ -118,7 +120,7 @@ class MainActivity : ComponentActivity() {
                     .constrainAs(notePanelBox) {
                         start.linkTo(pianoRollBox.absoluteRight)
                     }) {
-                DisplayNote(screenHeight)
+                DisplayNote(screenHeight, listNote)
             }
             Box(modifier = Modifier
                 .fillMaxHeight()
@@ -126,14 +128,14 @@ class MainActivity : ComponentActivity() {
                 .constrainAs(buttonBox) {
                     start.linkTo(notePanelBox.absoluteRight)
                 }) {
-                DisplayButtons()
+                DisplayButtons(listNote)
             }
         }
     }
 
-    @Preview
+
     @Composable
-    private fun DisplayButtons() {
+    private fun DisplayButtons(listNote: SnapshotStateList<NoteEnum>) {
         val files = getFilesFromDirectory()
         var isInformationModalVisible by remember { mutableStateOf(false) }
         var isFileModalVisible by remember { mutableStateOf(false) }
@@ -153,7 +155,7 @@ class MainActivity : ComponentActivity() {
                     .weight(1f)
                     .fillMaxWidth()
             )
-            ClearButton()
+            ClearButton(listNote)
             Spacer(
                 modifier = Modifier
                     .weight(1f)
@@ -218,7 +220,7 @@ class MainActivity : ComponentActivity() {
                         isInformationModalVisible = false
                     },
                     title = { Text("Informations") },
-                    text = { Text("Hello. Important things to know : Not displayed can have a little difference with generated MIDI file in term of note length (not about the pitch). Also, default BPM of MIDI FILE is 120 BPM. Have fun!. Finally you can find your file in your phone, in data files in your phone (data/data/com/purplerock/audiotomidiFile") },
+                    text = { Text("Hello. Important things to know : Not displayed can have a little difference with generated MIDI file in term of note length (not about the pitch). Also, default BPM of MIDI FILE is 120 BPM. Have fun!. Finally you can find your file in your phone, in data files in your phone (data/data/com/purplerock/audiotomidifile/files)") },
                     confirmButton = {
                         Button(
                             onClick = {
@@ -314,12 +316,11 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    @Preview
     @Composable
-    fun ClearButton() {
+    fun ClearButton(listNote: SnapshotStateList<NoteEnum>) {
         Button(
             onClick = {
-                stopAudioRecorder() //TODO:: CLEAN LA ZONE DES NOTES
+                cleanAudioRecorder(listNote)
             },
             content = {
                 Icon(
@@ -333,6 +334,10 @@ class MainActivity : ComponentActivity() {
                 .size(75.dp)
                 .padding(PaddingValues(bottom = 5.dp))
         )
+    }
+
+    private fun cleanAudioRecorder(listNote: SnapshotStateList<NoteEnum>) {
+        listNote.clear()
     }
 
     @Composable
@@ -384,7 +389,7 @@ class MainActivity : ComponentActivity() {
 
     @OptIn(ExperimentalTextApi::class)
     @Composable
-    private fun DisplayNote(screenHeight: Dp) {
+    private fun DisplayNote(screenHeight: Dp, listNote: SnapshotStateList<NoteEnum>) {
 
         val textMeasurer = rememberTextMeasurer()
         val pixelOffsetY = with(LocalDensity.current) {
@@ -393,7 +398,6 @@ class MainActivity : ComponentActivity() {
         var lastNote by remember { mutableStateOf(NoteEnum.KO) }
         var actualNote by remember { mutableStateOf("") }
         var lastNoteDropLast by remember { mutableStateOf("") }
-        val listNote = remember { mutableStateListOf<NoteEnum>() }
         val listNoteLabel = remember { mutableStateListOf<String>() }
         val width by remember { mutableStateOf(750.dp) }
         this.audioTOMIDIVisualizer.note.observe(this) { newValue ->
